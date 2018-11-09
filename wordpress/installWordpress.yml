@@ -1,0 +1,80 @@
+---
+- hosts: wordpress_nodes
+  become: yes
+  vars:
+    blog_path: /var/www/wordpress
+    database: adsk_wordpress
+    database_user: root
+  tasks:
+    - name: "install the latest version of Apache"
+      yum:
+        name: httpd
+        state: latest
+    
+    - name: "install php module"
+      yum:
+        name: "{{item}}"
+        state: latest
+      with_items:
+        - php
+        - php-mysql
+        
+    - name: "Start service httpd, if not started"
+      service:
+        name: httpd
+        state: restarted
+        
+    - name: "Install and start db server"
+      yum:
+        name: "{{item}}"
+      with_items:
+        - mariadb
+        - mariadb-server
+    - service:
+        name: mariadb
+        state: started
+        
+    - name: "download wordpress"    
+      get_url:
+        url: https://pl.wordpress.org/wordpress-4.9.8-pl_PL.tar.gz
+        dest: ~/wordpress.tar.gz
+        
+    - name: "unpack wordpress file"    
+      unarchive:
+        src: ~/wordpress.tar.gz
+        dest: /var/www/
+        remote_src: yes
+        
+    - name: "install mysql python"
+      yum:
+        name: "MySQL-python"
+        state: present
+        
+    - name: "Create a new database with name adsk_wordpress"
+      mysql_db:
+        name: "{{database}}"
+        state: present  
+        
+    - name: "configure apache vihost" 
+      copy:
+        src: templates/vhost.conf
+        dest: /etc/httpd/conf.d/blog.conf
+        
+    - name: "Start service httpd, if not started"
+      service:
+        name: httpd
+        state: restarted
+        
+    - name: "copy wordpress" 
+      template:
+        src: templates/wp-config.php
+        dest: "{{blog_path}}/wp-config.php"
+        
+        
+        
+        
+        
+        
+        
+        
+        
