@@ -1,0 +1,42 @@
+---
+- hosts: imageMe_nodes
+  become: yes
+  vars:
+    SEARCH_ENGINE_ID: 006879359584856769921:rplfy3clmho
+    GOOGLE_CLOUD_API_KEY: AIzaSyDLLC1pqOxkWA8jUjM-Cfwbl_13Sh_2t98
+  tasks:
+  
+    - name: "Install git, if not installed"
+      yum:
+        name: git
+        state: latest
+    
+    - name: "Clone github repo from jkanclerz repo"    
+      git:
+        repo: https://github.com/jkanclerz/google-search-python.git
+        version: master
+        dest: /home/ec2-user/imageMeRepo
+        
+    - name: "Install python, if not installed"
+      yum:
+        name: python
+        state: latest
+        
+    - name: "Setting environment variable SEARCH_ENGINE_ID" 
+      shell: "echo 'export SEARCH_ENGINE_ID='{{SEARCH_ENGINE_ID}}'' >> .bashrc"
+      
+    - name: "Setting environment variable GOOGLE_CLOUD_API_KEY" 
+      shell: "echo 'export GOOGLE_CLOUD_API_KEY='{{GOOGLE_CLOUD_API_KEY}}'' >> .bashrc"
+      
+    - name: "Creating directory"
+      file:
+        path: /home/ec2-user/bin
+        state: directory
+        
+    - name: "Copying sh script file and changing access rights"
+      copy:
+        src: ./templates/imageMe.sh
+        dest: /home/ec2-user/bin/imageMe.sh
+        mode: a+x
+        
+        
